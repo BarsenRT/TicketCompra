@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REPORTE DE CIERRE DE CAJA - MERCADO SAN ANTONIO</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 30px;
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .info-item span:first-child {
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #e6e6e6;
+        }
+        .concept-table {
+            width: 50%;
+            margin-left: auto;
+        }
+        .note {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 30px;
+            font-size: 14px;
+            font-style: italic;
+        }
+        .observation {
+            margin-top: 30px;
+            font-style: italic;
+            font-size: 14px;
+        }
+        .observation h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .value-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .value-label {
+            padding: 5px 10px;
+            color: white;
+            font-weight: bold;
+        }
+        .red-bg {
+            background-color: #ff4444;
+        }
+        .green-bg {
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>REPORTE DE CIERRE DE CAJA - MERCADO SAN ANTONIO</h1>
+        
+        <div class="info-grid">
+            <div class="info-item"><span>Usuario:</span> <span id="usuario"></span></div>
+            <div class="info-item"><span>Generado:</span> <span id="generado"></span></div>
+            <div class="info-item"><span>Fecha:</span> <span id="fecha"></span></div>
+            <div class="info-item"><span>Estado de caja:</span> <span id="estado-caja"></span></div>
+        </div>
+
+        <div class="value-summary">
+            <div>
+                <span class="value-label red-bg">Valor faltante:</span>
+                <span id="valor-faltante"></span>
+            </div>
+            <div>
+                <span class="value-label green-bg">Valor excedente:</span>
+                <span id="valor-excedente"></span>
+            </div>
+        </div>
+
+        <div class="value-summary">
+            <div>
+                <span>Efectivo de apertura:</span>
+                <span id="efectivo-apertura"></span>
+            </div>
+            <div>
+                <span>Efectivo de cierre:</span>
+                <span id="efectivo-cierre"></span>
+            </div>
+        </div>
+
+        <table id="tabla-recibos">
+            <thead>
+                <tr>
+                    <th>Recibo</th>
+                    <th>Detalle</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Las filas se llenarán dinámicamente -->
+            </tbody>
+        </table>
+
+        <table class="concept-table">
+            <thead>
+                <tr>
+                    <th>CONCEPTO</th>
+                    <th>VALOR</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Billetes</td>
+                    <td id="valor-billetes"></td>
+                </tr>
+                <tr>
+                    <td>Monedas</td>
+                    <td id="valor-monedas"></td>
+                </tr>
+                <tr>
+                    <td>Total efectivo en caja</td>
+                    <td id="total-efectivo-caja"></td>
+                </tr>
+                <tr>
+                    <td>Total transferencias</td>
+                    <td id="total-transferencias"></td>
+                </tr>
+                <tr class="total-row">
+                    <td>Total de cierre</td>
+                    <td id="total-cierre"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="note">
+            <p>El valor en rojo nunca debe ser superior al valor en verde. En caso de registrarse un valor superior se puede optar por recontar el dinero o revisar las transacciones bancarias. En última instancia es indicador de un registro duplicado de ventas, es decir, se registró la misma venta 2 veces o más en el día.</p>
+        </div>
+
+        <div class="observation">
+            <h3>OBSERVACIONES</h3>
+            <p id="observaciones"></p>
+        </div>
+    </div>
+
+    <script>
+        function obtenerParametro(nombre, valorPorDefecto) {
+            const params = new URLSearchParams(window.location.search);
+            return params.has(nombre) ? params.get(nombre) : valorPorDefecto;
+        }
+
+        function formatearMonto(monto) {
+            return parseFloat(monto).toFixed(2) + ' Bs';
+        }
+
+        function actualizarReporte() {
+            document.getElementById('usuario').textContent = obtenerParametro('usuario', '---');
+            document.getElementById('generado').textContent = obtenerParametro('generado', '---');
+            document.getElementById('fecha').textContent = obtenerParametro('fecha', '---');
+            document.getElementById('estado-caja').textContent = obtenerParametro('estadoCaja', '---');
+            document.getElementById('valor-faltante').textContent = formatearMonto(obtenerParametro('valorFaltante', 0));
+            document.getElementById('valor-excedente').textContent = formatearMonto(obtenerParametro('valorExcedente', 0));
+            document.getElementById('efectivo-apertura').textContent = formatearMonto(obtenerParametro('efectivoApertura', 0));
+            document.getElementById('efectivo-cierre').textContent = formatearMonto(obtenerParametro('efectivoCierre', 0));
+
+            const tablaRecibos = document.getElementById('tabla-recibos').getElementsByTagName('tbody')[0];
+            tablaRecibos.innerHTML = '';
+            let totalRecibos = 0;
+
+            const recibosJson = obtenerParametro('recibos', '[]');
+            const recibos = JSON.parse(decodeURIComponent(recibosJson));
+
+            recibos.forEach(recibo => {
+                const fila = tablaRecibos.insertRow();
+                fila.insertCell(0).textContent = recibo.numero;
+                fila.insertCell(1).textContent = recibo.detalle;
+                fila.insertCell(2).textContent = formatearMonto(recibo.total);
+                totalRecibos += parseFloat(recibo.total);
+            });
+
+            const filaTotal = tablaRecibos.insertRow();
+            filaTotal.className = 'total-row';
+            filaTotal.insertCell(0).colSpan = 2;
+            filaTotal.cells[0].textContent = 'TOTAL';
+            filaTotal.insertCell(1).textContent = formatearMonto(totalRecibos);
+
+            document.getElementById('valor-billetes').textContent = formatearMonto(obtenerParametro('valorBilletes', 0));
+            document.getElementById('valor-monedas').textContent = formatearMonto(obtenerParametro('valorMonedas', 0));
+            document.getElementById('total-efectivo-caja').textContent = formatearMonto(obtenerParametro('totalEfectivoCaja', 0));
+            document.getElementById('total-transferencias').textContent = formatearMonto(obtenerParametro('totalTransferencias', 0));
+            document.getElementById('total-cierre').textContent = formatearMonto(obtenerParametro('totalCierre', 0));
+
+            document.getElementById('observaciones').textContent = obtenerParametro('observaciones', '');
+        }
+
+        window.onload = actualizarReporte;
+    </script>
+</body>
+</html>
